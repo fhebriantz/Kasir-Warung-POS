@@ -1,0 +1,28 @@
+<?php
+
+require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../config/helpers.php';
+
+$pdo = getConnection();
+$settings = getSemuaPengaturan($pdo);
+
+$page = $_GET['page'] ?? 'dashboard';
+
+$allowedPages = ['dashboard', 'kasir', 'barang', 'transaksi', 'laporan', 'pengaturan', 'bantuan'];
+if (!in_array($page, $allowedPages)) {
+    $page = 'dashboard';
+}
+
+$viewMap = [
+    'dashboard'   => 'kasir/kasir',
+    'kasir'       => 'kasir/pos',
+    'barang'      => 'barang/barang',
+    'transaksi'   => 'transaksi/transaksi',
+    'laporan'     => 'laporan/laporan',
+    'pengaturan'  => 'pengaturan/pengaturan',
+    'bantuan'     => 'bantuan/bantuan',
+];
+
+include __DIR__ . '/../views/layouts/header.php';
+include __DIR__ . "/../views/{$viewMap[$page]}.php";
+include __DIR__ . '/../views/layouts/footer.php';
