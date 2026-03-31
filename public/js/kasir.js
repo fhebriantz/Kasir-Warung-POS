@@ -284,6 +284,59 @@ $(document).ready(function () {
         resetKasir();
     });
 
+    // ===================== TAMBAH MANUAL =====================
+    $('#btnTambahManual').on('click', function () {
+        let nama = $('#manualNama').val().trim();
+        let harga = parseInt($('#manualHarga').val()) || 0;
+        let qty = parseInt($('#manualQty').val()) || 1;
+
+        if (!nama) { alert('Nama barang harus diisi.'); $('#manualNama').focus(); return; }
+        if (harga <= 0) { alert('Harga harus lebih dari 0.'); $('#manualHarga').focus(); return; }
+
+        let $btn = $(this);
+        $btn.prop('disabled', true);
+
+        $.ajax({
+            url: 'api.php?action=tambah_barang_manual',
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({ nama: nama, harga: harga }),
+            success: function (res) {
+                if (res.success) {
+                    let item = res.barang;
+                    // Jika harga dari DB beda (barang sudah ada), pakai harga DB
+                    // Tambahkan ke keranjang dengan qty yang diminta
+                    for (let i = 0; i < qty; i++) {
+                        tambahKeKeranjang({
+                            id: item.id,
+                            nama: item.nama,
+                            harga_jual: parseFloat(item.harga_jual),
+                            stok: parseInt(item.stok),
+                            satuan: item.satuan
+                        });
+                    }
+                    // Reset form dan fokus ke cari barang
+                    $('#manualNama').val('');
+                    $('#manualHarga').val('');
+                    $('#manualQty').val(1);
+                    setTimeout(fokusKeSearch, 150);
+                } else {
+                    alert(res.message);
+                }
+            },
+            error: function () { alert('Terjadi kesalahan.'); },
+            complete: function () { $btn.prop('disabled', false); }
+        });
+    });
+
+    // Enter di form manual = klik tambah
+    $('#manualNama, #manualHarga, #manualQty').on('keydown', function (e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            $('#btnTambahManual').click();
+        }
+    });
+
     // ===================== ESCAPE HTML =====================
     function escapeHtml(text) {
         let div = document.createElement('div');

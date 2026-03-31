@@ -175,6 +175,59 @@ switch ($action) {
         }
         break;
 
+    case 'tambah_barang_manual':
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            echo json_encode(['success' => false, 'message' => 'Method not allowed']);
+            break;
+        }
+        $input = json_decode(file_get_contents('php://input'), true);
+        $nama = trim($input['nama'] ?? '');
+        $harga = (float) ($input['harga'] ?? 0);
+
+        if ($nama === '' || $harga <= 0) {
+            echo json_encode(['success' => false, 'message' => 'Nama dan harga wajib diisi.']);
+            break;
+        }
+
+        // Cek apakah barang dengan nama yang sama sudah ada
+        $stmt = $pdo->prepare("SELECT id, nama, harga_jual, stok, satuan, barcode FROM barang WHERE LOWER(nama) = LOWER(?)");
+        $stmt->execute([$nama]);
+        $existing = $stmt->fetch();
+
+        if ($existing) {
+            // Barang sudah ada, langsung return datanya
+            echo json_encode([
+                'success' => true,
+                'barang' => $existing,
+                'new' => false,
+            ]);
+        } else {
+            // Buat barang baru
+            require_once __DIR__ . '/../controllers/BarangController.php';
+            $barcode = generateBarcode($pdo);
+            $stmt = $pdo->prepare("
+                INSERT INTO barang (nama, harga_modal, harga_jual, stok, stok_minimal, satuan, barcode)
+                VALUES (:nama, 0, :harga, 9999, 5, 'pcs', :barcode)
+            ");
+            $stmt->execute([':nama' => $nama, ':harga' => $harga, ':barcode' => $barcode]);
+            $newId = $pdo->lastInsertId();
+
+            echo json_encode([
+                'success' => true,
+                'barang' => [
+                    'id' => $newId,
+                    'nama' => $nama,
+                    'harga_jual' => $harga,
+                    'stok' => 9999,
+                    'satuan' => 'pcs',
+                    'barcode' => $barcode,
+                ],
+                'new' => true,
+            ]);
+        }
+        break;
+
     case 'tambah_satuan':
         $nama = strtolower(trim($_GET['nama'] ?? ''));
         if ($nama !== '') {

@@ -3,6 +3,39 @@
 <div class="row">
     <!-- Kolom Kiri: Cari Barang + Keranjang -->
     <div class="col-lg-8 mb-4">
+        <!-- Tambah Manual -->
+        <div class="mb-3">
+            <button class="btn btn-outline-secondary w-100 d-flex justify-content-between align-items-center"
+                    type="button" data-bs-toggle="collapse" data-bs-target="#formManual">
+                <span><i class="bi bi-pencil-square"></i> Barang tidak ada? Tambah manual</span>
+                <i class="bi bi-chevron-down"></i>
+            </button>
+            <div class="collapse mt-2" id="formManual">
+                <div class="card shadow-sm"><div class="card-body">
+                    <div class="row g-2 align-items-end">
+                        <div class="col">
+                            <label class="form-label form-label-sm">Nama Barang</label>
+                            <input type="text" id="manualNama" class="form-control form-control-sm" placeholder="Nama barang" required>
+                        </div>
+                        <div class="col-auto" style="width:120px;">
+                            <label class="form-label form-label-sm">Harga</label>
+                            <input type="number" id="manualHarga" class="form-control form-control-sm" placeholder="0" min="0" step="500">
+                        </div>
+                        <div class="col-auto" style="width:70px;">
+                            <label class="form-label form-label-sm">Qty</label>
+                            <input type="number" id="manualQty" class="form-control form-control-sm" value="1" min="1">
+                        </div>
+                        <div class="col-auto">
+                            <button type="button" id="btnTambahManual" class="btn btn-success btn-sm">
+                                <i class="bi bi-plus-lg"></i> Tambah
+                            </button>
+                        </div>
+                    </div>
+                    <div class="form-text mt-1">Barang otomatis ditambahkan ke daftar barang jika belum ada.</div>
+                </div></div>
+            </div>
+        </div>
+
         <!-- Search -->
         <div class="card shadow-sm mb-3">
             <div class="card-body">
