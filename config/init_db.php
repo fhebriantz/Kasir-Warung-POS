@@ -113,13 +113,15 @@ function isiDataDemo(PDO $pdo): void
         ]);
     }
 
-    // Dummy transaksi
+    // Dummy transaksi (relatif dari hari ini, pakai waktu SQLite agar konsisten)
+    $hariIni = $pdo->query("SELECT DATE('now','localtime')")->fetchColumn();
+    $kemarin = $pdo->query("SELECT DATE('now','localtime','-1 day')")->fetchColumn();
     $dummyTransaksi = [
-        ['2026-03-30 08:15:00', [[1,2],[5,3],[10,2]]],
-        ['2026-03-30 10:30:00', [[4,5],[8,3]]],
-        ['2026-03-30 14:45:00', [[2,1],[3,2],[6,1]]],
-        ['2026-03-31 09:00:00', [[7,2],[9,1],[14,3]]],
-        ['2026-03-31 11:20:00', [[11,1],[12,1],[15,1]]],
+        [$kemarin . ' 08:15:00', [[1,2],[5,3],[10,2]]],
+        [$kemarin . ' 10:30:00', [[4,5],[8,3]]],
+        [$kemarin . ' 14:45:00', [[2,1],[3,2],[6,1]]],
+        [$hariIni . ' 09:00:00', [[7,2],[9,1],[14,3]]],
+        [$hariIni . ' 11:20:00', [[11,1],[12,1],[15,1]]],
     ];
 
     $stmtTrx = $pdo->prepare("INSERT INTO transaksi (tanggal, total_harga, bayar, kembalian) VALUES (:tgl, :total, :bayar, :kembali)");
