@@ -1,0 +1,53 @@
+============================================================
+  PANDUAN INSTALASI — Kasir Warung
+============================================================
+
+Jika muncul pesan "Windows Protected Your PC" atau
+"Windows Defender SmartScreen prevented an unrecognized app
+from starting", ikuti langkah berikut:
+
+
+--- CARA 1: Saat Muncul Pop-up SmartScreen ---
+
+1. Klik "More info" / "Selengkapnya"
+2. Klik "Run anyway" / "Tetap jalankan"
+3. Aplikasi akan berjalan normal
+
+
+--- CARA 2: Lewat Properties File ---
+
+1. Klik kanan file phpdesktop-chrome.exe
+2. Pilih "Properties" / "Properti"
+3. Di tab "General", centang "Unblock" di bagian bawah
+4. Klik "Apply" lalu "OK"
+5. Jalankan ulang file exe
+
+
+--- CARA 3: Unblock Semua File Sekaligus (PowerShell) ---
+
+1. Buka PowerShell sebagai Administrator
+2. Arahkan ke folder aplikasi:
+   cd "C:\path\ke\KasirWarung"
+3. Jalankan perintah:
+   Get-ChildItem -Recurse | Unblock-File
+4. Jalankan ulang file exe
+
+
+--- CARA 4: Matikan SmartScreen (Tidak Disarankan) ---
+
+1. Buka Windows Security
+2. Pilih "App & browser control"
+3. Klik "Reputation-based protection settings"
+4. Matikan "Check apps and files"
+   (Aktifkan kembali setelah instalasi selesai)
+
+
+============================================================
+  CATATAN
+============================================================
+
+Peringatan SmartScreen muncul karena aplikasi ini belum
+memiliki sertifikat digital (code signing). Ini BUKAN
+berarti aplikasi berbahaya.
+
+Cara 1 atau Cara 2 adalah yang paling direkomendasikan.
