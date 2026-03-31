@@ -240,13 +240,6 @@ $tanggal = date('d/m/Y H:i', strtotime($trx['tanggal']));
     <!-- Tombol (tidak tampil saat print) -->
     <div class="no-print">
         <button onclick="window.print()">Cetak Ulang</button>
-        <button class="btn-close-struk" onclick="window.close()">Tutup</button>
     </div>
-
-    <script>
-        window.onload = function () {
-            window.print();
-        };
-    </script>
 </body>
 </html>

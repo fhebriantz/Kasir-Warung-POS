@@ -49,17 +49,16 @@ $(document).ready(function () {
     });
 
     function tambahKeKeranjang(item) {
-        // Cek apakah sudah ada di keranjang
         let existing = keranjang.find(k => k.id == item.id);
         if (existing) {
             if (existing.jumlah + 1 > item.stok) {
-                alert('Stok "' + item.nama + '" tidak mencukupi! (sisa: ' + item.stok + ')');
+                appAlert('Stok "' + item.nama + '" tidak mencukupi! (sisa: ' + item.stok + ')', 'danger');
                 return;
             }
             existing.jumlah += 1;
         } else {
             if (item.stok <= 0) {
-                alert('Stok "' + item.nama + '" habis!');
+                appAlert('Stok "' + item.nama + '" habis!', 'danger');
                 return;
             }
             keranjang.push({
@@ -139,7 +138,7 @@ $(document).ready(function () {
             keranjang[idx].jumlah += 1;
             renderKeranjang();
         } else {
-            alert('Stok maksimal: ' + keranjang[idx].stok);
+            appAlert('Stok maksimal: ' + keranjang[idx].stok, 'warning');
         }
     });
 
@@ -220,11 +219,11 @@ $(document).ready(function () {
         let bayar = parseInt($('#uangBayar').val()) || 0;
 
         if (keranjang.length === 0) {
-            alert('Keranjang masih kosong!');
+            appAlert('Keranjang masih kosong!', 'warning');
             return;
         }
         if (bayar < total) {
-            alert('Uang bayar kurang!');
+            appAlert('Uang bayar kurang!', 'danger');
             return;
         }
 
@@ -241,19 +240,18 @@ $(document).ready(function () {
             }),
             success: function (res) {
                 if (res.success) {
-                    // Buka struk di tab/popup baru
-                    window.open('struk.php?id=' + res.data.id, '_blank', 'width=420,height=600,scrollbars=yes');
-
-                    $('#suksesTotal').text('Rp ' + formatRupiah(res.data.total));
-                    $('#suksesBayar').text('Rp ' + formatRupiah(res.data.bayar));
-                    $('#suksesKembalian').text('Rp ' + formatRupiah(res.data.kembalian));
-                    $('#modalSukses').modal('show');
+                    appPrint('struk.php?id=' + res.data.id, function () {
+                        $('#suksesTotal').text('Rp ' + formatRupiah(res.data.total));
+                        $('#suksesBayar').text('Rp ' + formatRupiah(res.data.bayar));
+                        $('#suksesKembalian').text('Rp ' + formatRupiah(res.data.kembalian));
+                        $('#modalSukses').modal('show');
+                    });
                 } else {
-                    alert('Gagal: ' + res.message);
+                    appAlert('Gagal: ' + res.message, 'danger');
                 }
             },
             error: function () {
-                alert('Terjadi kesalahan jaringan.');
+                appAlert('Terjadi kesalahan jaringan.', 'danger');
             },
             complete: function () {
                 $btn.prop('disabled', false).html('<i class="bi bi-check-circle"></i> Simpan Transaksi');
@@ -274,8 +272,12 @@ $(document).ready(function () {
     }
 
     $('#btnReset').on('click', function () {
-        if (keranjang.length === 0 || confirm('Bersihkan keranjang?')) {
+        if (keranjang.length === 0) {
             resetKasir();
+        } else {
+            appConfirm('Bersihkan keranjang?', function () {
+                resetKasir();
+            });
         }
     });
 
@@ -290,8 +292,8 @@ $(document).ready(function () {
         let harga = parseInt($('#manualHarga').val()) || 0;
         let qty = parseInt($('#manualQty').val()) || 1;
 
-        if (!nama) { alert('Nama barang harus diisi.'); $('#manualNama').focus(); return; }
-        if (harga <= 0) { alert('Harga harus lebih dari 0.'); $('#manualHarga').focus(); return; }
+        if (!nama) { appAlert('Nama barang harus diisi.', 'warning'); $('#manualNama').focus(); return; }
+        if (harga <= 0) { appAlert('Harga harus lebih dari 0.', 'warning'); $('#manualHarga').focus(); return; }
 
         let $btn = $(this);
         $btn.prop('disabled', true);
@@ -304,8 +306,6 @@ $(document).ready(function () {
             success: function (res) {
                 if (res.success) {
                     let item = res.barang;
-                    // Jika harga dari DB beda (barang sudah ada), pakai harga DB
-                    // Tambahkan ke keranjang dengan qty yang diminta
                     for (let i = 0; i < qty; i++) {
                         tambahKeKeranjang({
                             id: item.id,
@@ -315,16 +315,15 @@ $(document).ready(function () {
                             satuan: item.satuan
                         });
                     }
-                    // Reset form dan fokus ke cari barang
                     $('#manualNama').val('');
                     $('#manualHarga').val('');
                     $('#manualQty').val(1);
                     setTimeout(fokusKeSearch, 150);
                 } else {
-                    alert(res.message);
+                    appAlert(res.message, 'danger');
                 }
             },
-            error: function () { alert('Terjadi kesalahan.'); },
+            error: function () { appAlert('Terjadi kesalahan.', 'danger'); },
             complete: function () { $btn.prop('disabled', false); }
         });
     });

@@ -189,7 +189,7 @@ if (isset($_GET['edit'])) {
                                             <i class="bi bi-pencil"></i>
                                         </a>
                                         <form method="POST" action="index.php?page=barang"
-                                              class="d-inline" onsubmit="return confirm('Hapus barang &quot;<?= htmlspecialchars($b['nama'], ENT_QUOTES) ?>&quot;?')">
+                                              class="d-inline" data-confirm="Hapus barang &quot;<?= htmlspecialchars($b['nama'], ENT_QUOTES) ?>&quot;?">
                                             <input type="hidden" name="action" value="delete">
                                             <input type="hidden" name="id" value="<?= $b['id'] ?>">
                                             <button type="submit" class="btn btn-sm btn-outline-danger" title="Hapus">

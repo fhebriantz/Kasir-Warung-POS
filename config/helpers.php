@@ -34,6 +34,26 @@ function getSemuaPengaturan(PDO $pdo): array
 }
 
 /**
+ * Path folder uploads (kompatibel development & PHP Desktop).
+ * Development: public/uploads/
+ * PHP Desktop: www/uploads/
+ */
+function getUploadDir(): string
+{
+    // Cek dari index.php (public/ atau www/)
+    $fromPublic = __DIR__ . '/../public/uploads/';
+    $fromWww = __DIR__ . '/../uploads/';
+
+    if (is_dir(dirname($fromPublic))) {
+        if (!is_dir($fromPublic)) mkdir($fromPublic, 0755, true);
+        return $fromPublic;
+    }
+
+    if (!is_dir($fromWww)) mkdir($fromWww, 0755, true);
+    return $fromWww;
+}
+
+/**
  * Ambil satu nilai pengaturan.
  */
 function getPengaturan(PDO $pdo, string $kunci, string $default = ''): string

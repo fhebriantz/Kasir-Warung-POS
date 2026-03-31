@@ -161,11 +161,13 @@ switch ($action) {
             break;
         }
         try {
+            $pdo->exec("PRAGMA foreign_keys = OFF");
             $pdo->exec("DELETE FROM detail_transaksi");
             $pdo->exec("DELETE FROM transaksi");
             $pdo->exec("DELETE FROM barang");
             $pdo->exec("DELETE FROM pengaturan");
             $pdo->exec("DELETE FROM sqlite_sequence");
+            $pdo->exec("PRAGMA foreign_keys = ON");
             // Re-insert default pengaturan
             require_once __DIR__ . '/../config/init_db.php';
             initDatabase($pdo);

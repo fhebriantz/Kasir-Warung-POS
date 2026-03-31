@@ -41,10 +41,7 @@ function handlePengaturanAction(PDO $pdo): ?string
                     return 'danger|Ukuran file maksimal 2MB.';
                 }
 
-                $uploadDir = __DIR__ . '/../public/uploads/';
-                if (!is_dir($uploadDir)) {
-                    mkdir($uploadDir, 0755, true);
-                }
+                $uploadDir = getUploadDir();
 
                 $logoLama = getPengaturan($pdo, 'logo_toko');
                 if ($logoLama && file_exists($uploadDir . $logoLama)) {
@@ -62,7 +59,7 @@ function handlePengaturanAction(PDO $pdo): ?string
 
             case 'hapus_logo':
                 $logoLama = getPengaturan($pdo, 'logo_toko');
-                $uploadDir = __DIR__ . '/../public/uploads/';
+                $uploadDir = getUploadDir();
                 if ($logoLama && file_exists($uploadDir . $logoLama)) {
                     unlink($uploadDir . $logoLama);
                 }
@@ -71,19 +68,22 @@ function handlePengaturanAction(PDO $pdo): ?string
                 return 'success|Logo berhasil dihapus.';
 
             case 'reset_database':
-                $pdo->exec("DELETE FROM detail_transaksi");
-                $pdo->exec("DELETE FROM transaksi");
-                $pdo->exec("DELETE FROM barang");
-                $pdo->exec("DELETE FROM pengaturan WHERE kunci = 'demo_mode'");
-                return 'success|Database berhasil direset. Semua data barang dan transaksi dihapus.';
-
-            case 'isi_data_demo':
-                // Reset dulu
+                $pdo->exec("PRAGMA foreign_keys = OFF");
                 $pdo->exec("DELETE FROM detail_transaksi");
                 $pdo->exec("DELETE FROM transaksi");
                 $pdo->exec("DELETE FROM barang");
                 $pdo->exec("DELETE FROM sqlite_sequence WHERE name IN ('barang','transaksi','detail_transaksi')");
-                // Isi data demo
+                $pdo->exec("DELETE FROM pengaturan WHERE kunci = 'demo_mode'");
+                $pdo->exec("PRAGMA foreign_keys = ON");
+                return 'success|Database berhasil direset. Semua data barang dan transaksi dihapus.';
+
+            case 'isi_data_demo':
+                $pdo->exec("PRAGMA foreign_keys = OFF");
+                $pdo->exec("DELETE FROM detail_transaksi");
+                $pdo->exec("DELETE FROM transaksi");
+                $pdo->exec("DELETE FROM barang");
+                $pdo->exec("DELETE FROM sqlite_sequence WHERE name IN ('barang','transaksi','detail_transaksi')");
+                $pdo->exec("PRAGMA foreign_keys = ON");
                 require_once __DIR__ . '/../config/init_db.php';
                 isiDataDemo($pdo);
                 return 'success|Data demo berhasil diisi. Barang dan transaksi contoh sudah ditambahkan.';

@@ -115,11 +115,10 @@ $ringkasan = $stmtRingkasan->fetch();
                             <td class="text-end">Rp <?= number_format($trx['bayar'], 0, ',', '.') ?></td>
                             <td class="text-end">Rp <?= number_format($trx['kembalian'], 0, ',', '.') ?></td>
                             <td class="text-center">
-                                <a href="struk.php?id=<?= $trx['id'] ?>" target="_blank"
-                                   class="btn btn-sm btn-outline-success" title="Cetak Struk"
-                                   onclick="event.stopPropagation();">
+                                <button type="button" class="btn btn-sm btn-outline-success" title="Cetak Struk"
+                                        onclick="event.stopPropagation(); appPrint('struk.php?id=<?= $trx['id'] ?>');">
                                     <i class="bi bi-printer"></i>
-                                </a>
+                                </button>
                             </td>
                         </tr>
                         <!-- Detail Collapse -->

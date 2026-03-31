@@ -1,7 +1,12 @@
 <?php
 require_once __DIR__ . '/../../controllers/PengaturanController.php';
 
-$flash = handlePengaturanAction($pdo);
+$flash = null;
+try {
+    $flash = handlePengaturanAction($pdo);
+} catch (Throwable $e) {
+    $flash = 'danger|Error: ' . $e->getMessage();
+}
 $settings = getSemuaPengaturan($pdo);
 ?>
 
@@ -162,7 +167,7 @@ $settings = getSemuaPengaturan($pdo);
                 <?php if (!empty($settings['logo_toko'])): ?>
                     <hr>
                     <form method="POST" action="index.php?page=pengaturan"
-                          onsubmit="return confirm('Hapus logo toko?')">
+                          data-confirm="Hapus logo toko?">
                         <input type="hidden" name="action" value="hapus_logo">
                         <button type="submit" class="btn btn-outline-danger w-100">
                             <i class="bi bi-trash"></i> Hapus Logo
@@ -191,14 +196,14 @@ $settings = getSemuaPengaturan($pdo);
                 <?php endif; ?>
                 <div class="d-grid gap-2">
                     <form method="POST" action="index.php?page=pengaturan"
-                          onsubmit="return confirm('Isi data demo?\nData barang dan transaksi saat ini akan dihapus dan diganti data contoh.')">
+                          data-confirm="Isi data demo? Data barang dan transaksi saat ini akan dihapus dan diganti data contoh.">
                         <input type="hidden" name="action" value="isi_data_demo">
                         <button type="submit" class="btn btn-warning w-100">
                             <i class="bi bi-box-seam"></i> Isi Data Demo
                         </button>
                     </form>
                     <form method="POST" action="index.php?page=pengaturan"
-                          onsubmit="return confirm('Yakin ingin mereset database?\nSemua data barang dan transaksi akan dihapus permanen!')">
+                          data-confirm="Yakin ingin mereset database? Semua data barang dan transaksi akan dihapus permanen!">
                         <input type="hidden" name="action" value="reset_database">
                         <button type="submit" class="btn btn-danger w-100">
                             <i class="bi bi-trash"></i> Reset Database

@@ -369,27 +369,25 @@ $namaToko = htmlspecialchars($settings['nama_toko'] ?? 'Kasir Warung');
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     document.getElementById('btnResetTransaksi').addEventListener('click', function () {
-        if (!confirm('YAKIN hapus semua data transaksi?\nTindakan ini TIDAK BISA dibatalkan!')) return;
-        if (!confirm('Konfirmasi terakhir: semua transaksi akan dihapus permanen. Lanjutkan?')) return;
-
-        fetch('api.php?action=reset_transaksi', { method: 'POST' })
-            .then(r => r.json())
-            .then(res => {
-                alert(res.message);
-                if (res.success) location.reload();
-            });
+        appConfirm('YAKIN hapus semua data transaksi? Tindakan ini TIDAK BISA dibatalkan!', function () {
+            fetch('api.php?action=reset_transaksi', { method: 'POST' })
+                .then(r => r.json())
+                .then(res => {
+                    appAlert(res.message, res.success ? 'success' : 'danger');
+                    if (res.success) setTimeout(function () { location.reload(); }, 1500);
+                });
+        });
     });
 
     document.getElementById('btnResetAll').addEventListener('click', function () {
-        if (!confirm('PERINGATAN: Ini akan menghapus SEMUA data (barang, transaksi, pengaturan)!\nLanjutkan?')) return;
-        if (!confirm('TERAKHIR KALI: Data akan hilang permanen. Yakin?')) return;
-
-        fetch('api.php?action=reset_all', { method: 'POST' })
-            .then(r => r.json())
-            .then(res => {
-                alert(res.message);
-                if (res.success) location.href = 'index.php';
-            });
+        appConfirm('PERINGATAN: Ini akan menghapus SEMUA data (barang, transaksi, pengaturan)! Data akan hilang permanen.', function () {
+            fetch('api.php?action=reset_all', { method: 'POST' })
+                .then(r => r.json())
+                .then(res => {
+                    appAlert(res.message, res.success ? 'success' : 'danger');
+                    if (res.success) setTimeout(function () { location.href = 'index.php'; }, 1500);
+                });
+        });
     });
 });
 </script>
