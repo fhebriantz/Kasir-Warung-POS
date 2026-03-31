@@ -93,8 +93,8 @@ done
 echo "  [✓] Path disesuaikan"
 
 # --- Salin panduan instalasi ke dist/ ---
-cp "$PROJECT_DIR/install.txt" "$DIST_DIR/CARA-INSTALL.txt"
-echo "  [✓] CARA-INSTALL.txt disalin ke dist/"
+cp "$PROJECT_DIR/install.txt" "$DIST_DIR/$APP/CARA-INSTALL.txt"
+echo "  [✓] CARA-INSTALL.txt disalin ke $APP/"
 
 echo ""
 echo "  ══════════════════════════════════════"
