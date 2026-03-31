@@ -1,182 +1,161 @@
-# Kasir Warung (POS)
+# Kasir Warung — Lutfi POS
 
-Aplikasi Point of Sale (POS) sederhana untuk warung/toko kecil. Berbasis web lokal, bisa dijalankan sebagai aplikasi desktop via PHP Desktop.
+Aplikasi Point of Sale (POS) untuk warung dan toko kecil. Berjalan secara offline di komputer tanpa perlu internet, database tersimpan lokal. Bisa dijalankan di browser (development) atau sebagai aplikasi desktop Windows via PHP Desktop.
+
+## Fitur Utama
+
+- **Kasir / POS** — Cari barang atau scan barcode, keranjang belanja, hitung kembalian otomatis, tombol nominal cepat
+- **Manajemen Barang** — CRUD barang, stok minimal per barang, barcode otomatis (auto-generate), satuan kustom (bisa tambah sendiri)
+- **Cetak Barcode** — Pilih barang, atur jumlah cetak, preview & print barcode (format CODE128)
+- **Riwayat Transaksi** — Filter per tanggal, lihat detail item, cetak ulang struk
+- **Laporan Bulanan** — Omzet harian, laba kotor, barang terlaris, bisa dicetak
+- **Cetak Struk** — Desain untuk printer thermal 58mm, otomatis muncul setelah transaksi
+- **Dashboard** — Ringkasan transaksi & omzet hari ini, laba harian, peringatan stok rendah/habis
+- **Pengaturan Toko** — Nama, alamat, telepon, logo, warna header, footer struk
+- **Data Demo** — Data contoh langsung tersedia saat pertama buka, bisa di-reset kapan saja
 
 ## Tech Stack
 
-- PHP Native (tanpa framework)
-- SQLite (database file-based)
-- Bootstrap 5 + Bootstrap Icons
-- jQuery + Select2
+| Komponen | Teknologi |
+|----------|-----------|
+| Backend | PHP Native (tanpa framework) |
+| Database | SQLite (file-based, tanpa server) |
+| Frontend | Bootstrap 5.3, Bootstrap Icons |
+| Library JS | jQuery, Select2, JsBarcode |
+| Desktop | PHP Desktop (Chromium + PHP embedded) |
 
 ## Struktur Direktori
 
 ```
 kasir-warung/
-├── config/                  # Konfigurasi
-│   ├── database.php         # Koneksi PDO SQLite
-│   ├── helpers.php          # Helper functions (pengaturan)
-│   └── init_db.php          # Auto-create tabel
-├── controllers/             # Logic CRUD
-│   ├── BarangController.php
-│   └── PengaturanController.php
-├── models/                  # (reserved)
-├── views/                   # Tampilan (PHP + HTML)
-│   ├── layouts/             # Header & footer
-│   ├── kasir/               # Dashboard & POS
-│   ├── barang/              # CRUD barang
+├── config/
+│   ├── database.php         # Koneksi PDO SQLite + auto-init
+│   ├── helpers.php          # Helper: ambil pengaturan
+│   ├── init_db.php          # Buat tabel + data demo
+│   └── migrate.php          # Migrasi otomatis (kolom baru, tabel baru)
+├── controllers/
+│   ├── BarangController.php # CRUD barang + generate barcode
+│   └── PengaturanController.php # Settings, reset DB, isi demo, satuan
+├── views/
+│   ├── layouts/             # Header (navbar) & footer
+│   ├── kasir/               # Dashboard & halaman POS
+│   ├── barang/              # Form & tabel barang
+│   ├── barcode/             # Cetak barcode
 │   ├── transaksi/           # Riwayat transaksi
 │   ├── laporan/             # Laporan bulanan
-│   ├── pengaturan/          # Settings toko
-│   └── bantuan/             # Halaman bantuan
-├── public/                  # Document root (web server)
-│   ├── index.php            # Entry point / router
-│   ├── api.php              # AJAX endpoint
+│   ├── pengaturan/          # Pengaturan toko
+│   └── bantuan/             # Panduan penggunaan
+├── public/                  # Document root
+│   ├── index.php            # Entry point & router
+│   ├── api.php              # AJAX endpoints (search, transaksi, barcode, satuan)
 │   ├── struk.php            # Cetak struk thermal 58mm
 │   ├── css/style.css
-│   ├── js/app.js
-│   ├── js/kasir.js
+│   ├── js/
+│   │   ├── app.js           # Script umum
+│   │   ├── kasir.js         # Logic POS & keranjang
+│   │   └── barcode.js       # Generate & cetak barcode
 │   └── uploads/             # Logo toko
 ├── database/                # File SQLite (auto-generated)
-│   └── kasir.db
-├── phpdesktop/              # PHP Desktop binary (dari release)
+├── phpdesktop/              # PHP Desktop binary (download terpisah)
 ├── dist/                    # Hasil build
 ├── build.sh                 # Build script (Linux/Mac)
 ├── build.bat                # Build script (Windows)
+├── install.txt              # Panduan instalasi (bypass SmartScreen)
 ├── phpdesktop-settings.json # Konfigurasi PHP Desktop
 └── .gitignore
 ```
 
-## Cara Menjalankan (Development)
+## Cara Menjalankan
 
-### Prasyarat
+### Development (di browser)
 
-```bash
-sudo apt install php-cli php-sqlite3   # Ubuntu/Debian
-```
-
-### Jalankan
+**Prasyarat:** PHP 7.4+ dengan ekstensi SQLite
 
 ```bash
+# Ubuntu/Debian
+sudo apt install php-cli php-sqlite3
+
+# Jalankan
 cd public
 php -S localhost:8000
 ```
 
-Buka http://localhost:8000 di browser. Database `kasir.db` otomatis ter-generate saat pertama kali diakses.
+Buka http://localhost:8000 — database dan data demo otomatis dibuat saat pertama akses.
 
-## Build ke PHP Desktop (Distribusi .exe)
+### Desktop (Windows .exe)
 
-### 1. Download PHP Desktop
+1. **Download PHP Desktop** dari https://github.com/nicengi/phpdesktop/releases (versi Chrome)
+2. Ekstrak ke folder `phpdesktop/` di root project
+3. Pastikan ekstensi SQLite aktif di `phpdesktop/php/php.ini`:
+   ```ini
+   extension=php_pdo_sqlite.dll
+   extension=php_sqlite3.dll
+   ```
+4. Jalankan build:
+   ```bash
+   ./build.sh      # Linux/Mac
+   build.bat        # Windows
+   ```
+5. Hasil build ada di `dist/KasirWarung/` — jalankan `kasir-warung.exe`
+6. Untuk distribusi: `cd dist && zip -r KasirWarung.zip KasirWarung/`
 
-Download dari https://github.com/cztomczak/phpdesktop/releases — pilih versi **Chrome** (phpdesktop-chrome-xxx.zip).
+> Jika muncul peringatan Windows SmartScreen, lihat file `CARA-INSTALL.txt` di dalam folder hasil build.
 
-### 2. Ekstrak ke project
-
-```bash
-mkdir phpdesktop
-# Ekstrak isi ZIP ke folder phpdesktop/
-# Pastikan phpdesktop/phpdesktop-chrome.exe ada
-```
-
-### 3. Cek SQLite extension
-
-Buka `phpdesktop/php/php.ini`, pastikan baris ini aktif (tanpa `;` di depan):
-
-```ini
-extension=php_pdo_sqlite.dll
-extension=php_sqlite3.dll
-```
-
-### 4. Build
-
-```bash
-# Linux/Mac
-./build.sh
-
-# Windows
-build.bat
-```
-
-Hasil build: `dist/KasirWarung/`
-
-### 5. Distribusi
-
-```bash
-cd dist
-zip -r KasirWarung.zip KasirWarung/
-```
-
-Kirim `KasirWarung.zip` ke client. Client tinggal extract dan double-click `phpdesktop-chrome.exe`.
-
-## Sistem Upload
-
-- Logo toko diupload via menu **Pengaturan**
-- File tersimpan di `public/uploads/`
-- Format: PNG, JPG, GIF, WebP (maks 2MB)
-- Logo tampil di navbar dan struk
-
-## Reset Database
-
-### Reset total (semua data hilang)
-
-Hapus file `database/kasir.db`, lalu buka aplikasi kembali. Database baru otomatis dibuat.
-
-### Reset via aplikasi
-
-Buka menu **Bantuan** > scroll ke bagian **Reset Database**:
-
-- **Reset Semua Transaksi** — hapus transaksi saja, barang & pengaturan tetap
-- **Reset Seluruh Database** — hapus semua data dan mulai dari awal
-
-## Fitur
-
-| Fitur | Deskripsi |
-|-------|-----------|
-| Dashboard | Statistik & peringatan stok rendah |
-| Kasir (POS) | Cari barang (Select2 + AJAX), keranjang, hitung otomatis |
-| CRUD Barang | Tambah, edit, hapus barang + barcode |
-| Riwayat | Filter per tanggal, detail item, cetak ulang struk |
-| Laporan Bulanan | Omzet harian, laba kotor, barang terlaris |
-| Cetak Struk | Thermal 58mm, auto-print, data toko dinamis |
-| Pengaturan | Nama toko, alamat, logo, warna header, footer struk |
-| Bantuan | Panduan lengkap di dalam aplikasi |
-
-## Git Workflow
-
-```bash
-# Clone / init
-git clone <url> kasir-warung
-cd kasir-warung
-
-# Development biasa
-git add -A
-git commit -m "deskripsi perubahan"
-
-# Buat branch fitur baru
-git checkout -b fitur/nama-fitur
-# ... coding ...
-git add -A
-git commit -m "tambah fitur xxx"
-git checkout main
-git merge fitur/nama-fitur
-
-# Tag versi release
-git tag -a v1.0.0 -m "Release versi 1.0.0"
-
-# Push ke remote
-git push origin main --tags
-```
-
-### Konvensi Commit
+## Alur Penggunaan
 
 ```
-tambah: fitur baru
-ubah: perubahan fitur existing
-perbaiki: bug fix
-hapus: hapus fitur/file
-docs: dokumentasi
+1. Buka aplikasi → data demo sudah terisi
+2. Coba fitur kasir, barang, laporan
+3. Jika sudah siap pakai data asli → Pengaturan > Reset Database
+4. Isi data toko di Pengaturan (nama, alamat, logo)
+5. Tambah barang → barcode otomatis di-generate
+6. Mulai transaksi di halaman Kasir
+7. Lihat laporan di halaman Laporan
 ```
+
+## Fitur Detail
+
+### Barcode
+
+- Barcode otomatis di-generate jika dikosongkan (format: `KW` + tanggal + 4 digit acak, contoh: `KW2604018472`)
+- Barcode bisa diinput manual (dicek duplikat secara real-time)
+- Halaman **Cetak Barcode** untuk print label barcode (pilih barang, atur jumlah, preview, cetak)
+- Format: CODE128 (kompatibel dengan semua barcode scanner)
+
+### Satuan Kustom
+
+- Satuan bawaan: pcs, kg, liter, pack, lusin, dus, botol, sachet
+- Butuh satuan lain? Pilih **"+ Lainnya..."** di dropdown satuan saat tambah/edit barang
+- Satuan kustom bisa dihapus (dengan opsi ganti satuan di semua barang yang memakainya)
+
+### Stok Minimal
+
+- Setiap barang punya batas **stok minimal** (default: 5)
+- Dashboard menampilkan peringatan barang yang stoknya di bawah minimal atau habis
+- Indikator warna di tabel barang (merah = di bawah minimal, hijau = aman)
+
+### Data Demo & Reset
+
+- Saat pertama kali dibuka, aplikasi terisi 15 barang contoh + 5 transaksi demo
+- Banner kuning di dashboard menandakan mode demo aktif
+- Di **Pengaturan**: tombol **Isi Data Demo** (reset + isi contoh) dan **Reset Database** (kosongkan semua)
+- Pengaturan toko tetap tersimpan setelah reset
+
+## API Endpoints
+
+| Endpoint | Method | Fungsi |
+|----------|--------|--------|
+| `api.php?action=search_barang&q=...` | GET | Cari barang (nama/barcode) untuk POS |
+| `api.php?action=simpan_transaksi` | POST | Simpan transaksi + kurangi stok |
+| `api.php?action=check_barcode&barcode=...` | GET | Cek duplikat barcode |
+| `api.php?action=tambah_satuan&nama=...` | GET | Tambah satuan kustom |
+| `api.php?action=hapus_satuan` | POST | Hapus satuan + ganti di barang |
+| `api.php?action=cek_satuan_dipakai&nama=...` | GET | Cek jumlah barang yang pakai satuan |
+| `api.php?action=reset_transaksi` | POST | Hapus semua transaksi |
+| `api.php?action=reset_all` | POST | Reset seluruh database |
 
 ## Lisensi
 
 Bebas digunakan untuk keperluan pribadi dan komersial.
+
+**Lutfi POS** adalah nama resmi aplikasi ini dan tidak boleh diubah atau dihapus dari source code.

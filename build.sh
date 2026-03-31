@@ -96,13 +96,20 @@ echo "  [✓] Path disesuaikan"
 cp "$PROJECT_DIR/install.txt" "$DIST_DIR/$APP/CARA-INSTALL.txt"
 echo "  [✓] CARA-INSTALL.txt disalin ke $APP/"
 
+# --- Rename exe → kasir-warung.exe ---
+EXE_NAME=$(basename "$EXE")
+if [ -f "$DIST_DIR/$APP/$EXE_NAME" ]; then
+    mv "$DIST_DIR/$APP/$EXE_NAME" "$DIST_DIR/$APP/kasir-warung.exe"
+    echo "  [✓] $EXE_NAME → kasir-warung.exe"
+fi
+
 echo ""
 echo "  ══════════════════════════════════════"
 echo "  BUILD SELESAI!"
 echo "  ══════════════════════════════════════"
 echo ""
 echo "  Output  : $DIST_DIR/$APP/"
-echo "  Jalankan: double-click phpdesktop-chrome.exe"
+echo "  Jalankan: double-click kasir-warung.exe"
 echo ""
 echo "  Distribusi: cd dist && zip -r $APP.zip $APP/"
 echo ""

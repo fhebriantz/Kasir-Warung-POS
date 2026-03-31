@@ -123,6 +123,7 @@ $settings = getSemuaPengaturan($pdo);
                 <i class="bi bi-check-lg"></i> Simpan Pengaturan
             </button>
         </form>
+
     </div>
 
     <!-- Kolom Kanan: Logo -->
@@ -168,6 +169,43 @@ $settings = getSemuaPengaturan($pdo);
                         </button>
                     </form>
                 <?php endif; ?>
+            </div>
+        </div>
+
+        <!-- Data & Reset -->
+        <?php
+        $cekDemo = $pdo->query("SELECT nilai FROM pengaturan WHERE kunci = 'demo_mode'");
+        $rowDemo = $cekDemo ? $cekDemo->fetch() : null;
+        $isDemo = $rowDemo && $rowDemo['nilai'] === '1';
+        ?>
+        <div class="card shadow-sm mt-3 <?= $isDemo ? 'border-warning' : '' ?>">
+            <div class="card-header bg-danger text-white">
+                <i class="bi bi-database-gear"></i> Data & Reset
+            </div>
+            <div class="card-body">
+                <?php if ($isDemo): ?>
+                    <div class="alert alert-warning mb-3">
+                        <i class="bi bi-info-circle-fill"></i>
+                        <strong>Mode Demo Aktif</strong> — Data saat ini adalah data contoh.
+                    </div>
+                <?php endif; ?>
+                <div class="d-grid gap-2">
+                    <form method="POST" action="index.php?page=pengaturan"
+                          onsubmit="return confirm('Isi data demo?\nData barang dan transaksi saat ini akan dihapus dan diganti data contoh.')">
+                        <input type="hidden" name="action" value="isi_data_demo">
+                        <button type="submit" class="btn btn-warning w-100">
+                            <i class="bi bi-box-seam"></i> Isi Data Demo
+                        </button>
+                    </form>
+                    <form method="POST" action="index.php?page=pengaturan"
+                          onsubmit="return confirm('Yakin ingin mereset database?\nSemua data barang dan transaksi akan dihapus permanen!')">
+                        <input type="hidden" name="action" value="reset_database">
+                        <button type="submit" class="btn btn-danger w-100">
+                            <i class="bi bi-trash"></i> Reset Database
+                        </button>
+                    </form>
+                </div>
+                <div class="form-text mt-2">Pengaturan toko tetap tersimpan setelah reset.</div>
             </div>
         </div>
 

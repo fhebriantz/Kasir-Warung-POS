@@ -2,9 +2,13 @@
   PANDUAN INSTALASI — Kasir Warung
 ============================================================
 
+--- LANGKAH 1: Jalankan Aplikasi ---
+
+Klik 2 kali file "kasir-warung.exe" untuk membuka aplikasi.
+
 Jika muncul pesan "Windows Protected Your PC" atau
 "Windows Defender SmartScreen prevented an unrecognized app
-from starting", ikuti langkah berikut:
+from starting", ikuti salah satu cara berikut:
 
 
 --- CARA 1: Saat Muncul Pop-up SmartScreen ---
@@ -16,7 +20,7 @@ from starting", ikuti langkah berikut:
 
 --- CARA 2: Lewat Properties File ---
 
-1. Klik kanan file phpdesktop-chrome.exe
+1. Klik kanan file kasir-warung.exe
 2. Pilih "Properties" / "Properti"
 3. Di tab "General", centang "Unblock" di bagian bawah
 4. Klik "Apply" lalu "OK"

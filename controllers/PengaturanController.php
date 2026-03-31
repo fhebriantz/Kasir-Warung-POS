@@ -2,6 +2,12 @@
 
 require_once __DIR__ . '/../config/helpers.php';
 
+function getAllSatuanKustom(PDO $pdo): array
+{
+    $stmt = $pdo->query("SELECT * FROM satuan_kustom ORDER BY nama ASC");
+    return $stmt ? $stmt->fetchAll() : [];
+}
+
 function handlePengaturanAction(PDO $pdo): ?string
 {
     if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -40,7 +46,6 @@ function handlePengaturanAction(PDO $pdo): ?string
                     mkdir($uploadDir, 0755, true);
                 }
 
-                // Hapus logo lama
                 $logoLama = getPengaturan($pdo, 'logo_toko');
                 if ($logoLama && file_exists($uploadDir . $logoLama)) {
                     unlink($uploadDir . $logoLama);
@@ -64,6 +69,45 @@ function handlePengaturanAction(PDO $pdo): ?string
                 $stmt = $pdo->prepare("INSERT OR REPLACE INTO pengaturan (kunci, nilai) VALUES ('logo_toko', '')");
                 $stmt->execute();
                 return 'success|Logo berhasil dihapus.';
+
+            case 'reset_database':
+                $pdo->exec("DELETE FROM detail_transaksi");
+                $pdo->exec("DELETE FROM transaksi");
+                $pdo->exec("DELETE FROM barang");
+                $pdo->exec("DELETE FROM pengaturan WHERE kunci = 'demo_mode'");
+                return 'success|Database berhasil direset. Semua data barang dan transaksi dihapus.';
+
+            case 'isi_data_demo':
+                // Reset dulu
+                $pdo->exec("DELETE FROM detail_transaksi");
+                $pdo->exec("DELETE FROM transaksi");
+                $pdo->exec("DELETE FROM barang");
+                $pdo->exec("DELETE FROM sqlite_sequence WHERE name IN ('barang','transaksi','detail_transaksi')");
+                // Isi data demo
+                require_once __DIR__ . '/../config/init_db.php';
+                isiDataDemo($pdo);
+                return 'success|Data demo berhasil diisi. Barang dan transaksi contoh sudah ditambahkan.';
+
+            case 'tambah_satuan':
+                $nama = strtolower(trim($_POST['nama_satuan'] ?? ''));
+                if ($nama === '') {
+                    return 'danger|Nama satuan tidak boleh kosong.';
+                }
+                $stmt = $pdo->prepare("INSERT OR IGNORE INTO satuan_kustom (nama) VALUES (:nama)");
+                $stmt->execute([':nama' => $nama]);
+                if ($stmt->rowCount() === 0) {
+                    return 'warning|Satuan "' . $nama . '" sudah ada.';
+                }
+                return 'success|Satuan "' . $nama . '" berhasil ditambahkan.';
+
+            case 'hapus_satuan':
+                $id = (int) ($_POST['satuan_id'] ?? 0);
+                if ($id <= 0) {
+                    return 'danger|Data tidak valid.';
+                }
+                $stmt = $pdo->prepare("DELETE FROM satuan_kustom WHERE id = ?");
+                $stmt->execute([$id]);
+                return 'success|Satuan berhasil dihapus.';
 
             default:
                 return 'danger|Aksi tidak dikenali.';

@@ -1,5 +1,16 @@
 <?php
 
+function generateBarcode(PDO $pdo): string
+{
+    do {
+        $code = 'KW' . date('ymd') . str_pad(mt_rand(0, 9999), 4, '0', STR_PAD_LEFT);
+        $stmt = $pdo->prepare("SELECT COUNT(*) FROM barang WHERE barcode = ?");
+        $stmt->execute([$code]);
+        $exists = (int) $stmt->fetchColumn() > 0;
+    } while ($exists);
+    return $code;
+}
+
 function getAllBarang(PDO $pdo): array
 {
     $stmt = $pdo->query("SELECT * FROM barang ORDER BY id DESC");
@@ -15,17 +26,23 @@ function getBarangById(PDO $pdo, int $id): array|false
 
 function createBarang(PDO $pdo, array $data): bool
 {
+    $barcode = trim($data['barcode'] ?? '');
+    if ($barcode === '') {
+        $barcode = generateBarcode($pdo);
+    }
+
     $stmt = $pdo->prepare("
-        INSERT INTO barang (nama, harga_modal, harga_jual, stok, satuan, barcode)
-        VALUES (:nama, :harga_modal, :harga_jual, :stok, :satuan, :barcode)
+        INSERT INTO barang (nama, harga_modal, harga_jual, stok, stok_minimal, satuan, barcode)
+        VALUES (:nama, :harga_modal, :harga_jual, :stok, :stok_minimal, :satuan, :barcode)
     ");
     return $stmt->execute([
-        ':nama'        => trim($data['nama']),
-        ':harga_modal' => (float) $data['harga_modal'],
-        ':harga_jual'  => (float) $data['harga_jual'],
-        ':stok'        => (int) $data['stok'],
-        ':satuan'      => trim($data['satuan']),
-        ':barcode'     => trim($data['barcode']) ?: null,
+        ':nama'         => trim($data['nama']),
+        ':harga_modal'  => (float) $data['harga_modal'],
+        ':harga_jual'   => (float) $data['harga_jual'],
+        ':stok'         => (int) $data['stok'],
+        ':stok_minimal' => (int) ($data['stok_minimal'] ?? 5),
+        ':satuan'       => trim($data['satuan']),
+        ':barcode'      => $barcode,
     ]);
 }
 
@@ -37,19 +54,21 @@ function updateBarang(PDO $pdo, int $id, array $data): bool
             harga_modal = :harga_modal,
             harga_jual = :harga_jual,
             stok = :stok,
+            stok_minimal = :stok_minimal,
             satuan = :satuan,
             barcode = :barcode,
             updated_at = datetime('now','localtime')
         WHERE id = :id
     ");
     return $stmt->execute([
-        ':id'          => $id,
-        ':nama'        => trim($data['nama']),
-        ':harga_modal' => (float) $data['harga_modal'],
-        ':harga_jual'  => (float) $data['harga_jual'],
-        ':stok'        => (int) $data['stok'],
-        ':satuan'      => trim($data['satuan']),
-        ':barcode'     => trim($data['barcode']) ?: null,
+        ':id'           => $id,
+        ':nama'         => trim($data['nama']),
+        ':harga_modal'  => (float) $data['harga_modal'],
+        ':harga_jual'   => (float) $data['harga_jual'],
+        ':stok'         => (int) $data['stok'],
+        ':stok_minimal' => (int) ($data['stok_minimal'] ?? 5),
+        ':satuan'       => trim($data['satuan']),
+        ':barcode'      => trim($data['barcode']) ?: null,
     ]);
 }
 

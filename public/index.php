@@ -8,7 +8,7 @@ $settings = getSemuaPengaturan($pdo);
 
 $page = $_GET['page'] ?? 'dashboard';
 
-$allowedPages = ['dashboard', 'kasir', 'barang', 'transaksi', 'laporan', 'pengaturan', 'bantuan'];
+$allowedPages = ['dashboard', 'kasir', 'barang', 'barcode', 'transaksi', 'laporan', 'pengaturan', 'bantuan'];
 if (!in_array($page, $allowedPages)) {
     $page = 'dashboard';
 }
@@ -17,6 +17,7 @@ $viewMap = [
     'dashboard'   => 'kasir/kasir',
     'kasir'       => 'kasir/pos',
     'barang'      => 'barang/barang',
+    'barcode'     => 'barcode/barcode',
     'transaksi'   => 'transaksi/transaksi',
     'laporan'     => 'laporan/laporan',
     'pengaturan'  => 'pengaturan/pengaturan',

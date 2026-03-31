@@ -34,11 +34,18 @@ $(document).ready(function () {
         }
     });
 
+    // ===================== AUTO-FOCUS PENCARIAN =====================
+    function fokusKeSearch() {
+        $('#cariBarang').select2('open');
+    }
+    setTimeout(fokusKeSearch, 300);
+
     // ===================== PILIH BARANG =====================
     $('#cariBarang').on('select2:select', function (e) {
         let data = e.params.data;
         tambahKeKeranjang(data);
         $(this).val(null).trigger('change');
+        setTimeout(fokusKeSearch, 150);
     });
 
     function tambahKeKeranjang(item) {
@@ -263,6 +270,7 @@ $(document).ready(function () {
         $('#kembalian').removeClass('text-danger').addClass('text-success');
         $('#cariBarang').val(null).trigger('change');
         updateTombolSimpan();
+        setTimeout(fokusKeSearch, 150);
     }
 
     $('#btnReset').on('click', function () {

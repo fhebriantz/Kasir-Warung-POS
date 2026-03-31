@@ -60,31 +60,63 @@ if (isset($_GET['edit'])) {
                     </div>
 
                     <div class="row mb-3">
-                        <div class="col-6">
+                        <div class="col-4">
                             <label class="form-label">Stok</label>
                             <input type="number" name="stok" class="form-control" min="0"
                                    value="<?= $edit['stok'] ?? 0 ?>">
                         </div>
-                        <div class="col-6">
+                        <div class="col-4">
+                            <label class="form-label">Stok Min.</label>
+                            <input type="number" name="stok_minimal" class="form-control" min="0"
+                                   value="<?= $edit['stok_minimal'] ?? 5 ?>"
+                                   title="Peringatan muncul jika stok di bawah angka ini">
+                        </div>
+                        <div class="col-4">
                             <label class="form-label">Satuan</label>
-                            <select name="satuan" class="form-select">
+                            <select name="satuan" id="selectSatuan" class="form-select">
                                 <?php
-                                $satuanList = ['pcs', 'kg', 'liter', 'pack', 'lusin', 'dus', 'botol', 'sachet'];
+                                $satuanBawaan = ['pcs', 'kg', 'liter', 'pack', 'lusin', 'dus', 'botol', 'sachet'];
+                                $stmtSatuan = $pdo->query("SELECT nama FROM satuan_kustom ORDER BY nama ASC");
+                                $satuanKustom = $stmtSatuan ? $stmtSatuan->fetchAll(PDO::FETCH_COLUMN) : [];
+                                $satuanList = array_unique(array_merge($satuanBawaan, $satuanKustom));
                                 $currentSatuan = $edit['satuan'] ?? 'pcs';
+                                if (!in_array($currentSatuan, $satuanList)) {
+                                    $satuanList[] = $currentSatuan;
+                                }
                                 foreach ($satuanList as $s): ?>
-                                    <option value="<?= $s ?>" <?= $currentSatuan === $s ? 'selected' : '' ?>>
-                                        <?= ucfirst($s) ?>
+                                    <option value="<?= htmlspecialchars($s) ?>"
+                                            <?= $currentSatuan === $s ? 'selected' : '' ?>
+                                            <?= in_array($s, $satuanKustom) ? 'data-kustom="1"' : '' ?>>
+                                        <?= ucfirst(htmlspecialchars($s)) ?>
                                     </option>
                                 <?php endforeach; ?>
+                                <option value="__lainnya__">+ Lainnya...</option>
                             </select>
+                            <input type="text" id="inputSatuanBaru" class="form-control mt-2" style="display:none;"
+                                   placeholder="Ketik satuan baru, misal: rim, kodi...">
+                            <?php if (!empty($satuanKustom)): ?>
+                            <div class="mt-2" id="satuanKustomList">
+                                <small class="text-muted">Satuan kustom:</small>
+                                <div class="d-flex flex-wrap gap-1 mt-1">
+                                    <?php foreach ($satuanKustom as $sk): ?>
+                                    <span class="badge bg-light text-dark border d-flex align-items-center gap-1 satuan-badge" data-nama="<?= htmlspecialchars($sk) ?>">
+                                        <?= ucfirst(htmlspecialchars($sk)) ?>
+                                        <i class="bi bi-x-circle-fill text-danger" role="button" style="cursor:pointer;" title="Hapus satuan"></i>
+                                    </span>
+                                    <?php endforeach; ?>
+                                </div>
+                            </div>
+                            <?php endif; ?>
                         </div>
                     </div>
 
                     <div class="mb-3">
                         <label class="form-label">Barcode</label>
-                        <input type="text" name="barcode" class="form-control"
+                        <input type="text" name="barcode" id="inputBarcode" class="form-control"
                                value="<?= htmlspecialchars($edit['barcode'] ?? '') ?>"
-                               placeholder="Opsional">
+                               placeholder="Kosongkan untuk generate otomatis">
+                        <div id="barcodeWarning" class="invalid-feedback" style="display:none;"></div>
+                        <div class="form-text">Jika dikosongkan, barcode akan di-generate otomatis (format: KW + tanggal + 4 digit acak)</div>
                     </div>
 
                     <div class="d-grid gap-2">
@@ -143,10 +175,9 @@ if (isset($_GET['edit'])) {
                                     <td class="text-end">Rp <?= number_format($b['harga_modal'], 0, ',', '.') ?></td>
                                     <td class="text-end">Rp <?= number_format($b['harga_jual'], 0, ',', '.') ?></td>
                                     <td class="text-center">
-                                        <?php if ($b['stok'] <= 5): ?>
+                                        <?php $minStok = $b['stok_minimal'] ?? 5; ?>
+                                        <?php if ($b['stok'] <= $minStok): ?>
                                             <span class="badge bg-danger"><?= $b['stok'] ?></span>
-                                        <?php elseif ($b['stok'] <= 20): ?>
-                                            <span class="badge bg-warning text-dark"><?= $b['stok'] ?></span>
                                         <?php else: ?>
                                             <span class="badge bg-success"><?= $b['stok'] ?></span>
                                         <?php endif; ?>
@@ -176,3 +207,141 @@ if (isset($_GET['edit'])) {
         </div>
     </div>
 </div>
+
+<!-- Modal Hapus Satuan -->
+<div class="modal fade" id="modalHapusSatuan" tabindex="-1">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h6 class="modal-title"><i class="bi bi-trash"></i> Hapus Satuan</h6>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Hapus satuan "<strong id="hapusSatuanNama"></strong>"?</p>
+                <div id="hapusSatuanInfo" class="alert alert-warning" style="display:none;">
+                    <i class="bi bi-exclamation-triangle"></i>
+                    <span id="hapusSatuanCount"></span> barang menggunakan satuan ini.
+                    Ganti dengan:
+                    <select id="hapusSatuanGanti" class="form-select form-select-sm mt-2">
+                        <?php
+                        $satuanBawaan = ['pcs', 'kg', 'liter', 'pack', 'lusin', 'dus', 'botol', 'sachet'];
+                        foreach ($satuanBawaan as $s): ?>
+                            <option value="<?= $s ?>"><?= ucfirst($s) ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Batal</button>
+                <button type="button" class="btn btn-danger btn-sm" id="btnKonfirmHapusSatuan">Hapus</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    // --- Barcode validation ---
+    var inputBarcode = document.getElementById('inputBarcode');
+    var barcodeWarning = document.getElementById('barcodeWarning');
+    if (inputBarcode) {
+        var timer = null;
+        var editId = <?= json_encode($edit['id'] ?? 0) ?>;
+
+        inputBarcode.addEventListener('input', function () {
+            clearTimeout(timer);
+            var val = this.value.trim();
+            barcodeWarning.style.display = 'none';
+            inputBarcode.classList.remove('is-invalid');
+            if (val === '') return;
+
+            timer = setTimeout(function () {
+                var url = 'api.php?action=check_barcode&barcode=' + encodeURIComponent(val);
+                if (editId > 0) url += '&exclude_id=' + editId;
+                fetch(url).then(function(r){ return r.json(); }).then(function(res) {
+                    if (res.exists) {
+                        barcodeWarning.textContent = res.message;
+                        barcodeWarning.style.display = 'block';
+                        inputBarcode.classList.add('is-invalid');
+                    }
+                });
+            }, 400);
+        });
+    }
+
+    // --- Satuan "Lainnya..." ---
+    var selectSatuan = document.getElementById('selectSatuan');
+    var inputSatuanBaru = document.getElementById('inputSatuanBaru');
+    if (selectSatuan && inputSatuanBaru) {
+        selectSatuan.addEventListener('change', function () {
+            if (this.value === '__lainnya__') {
+                inputSatuanBaru.style.display = 'block';
+                inputSatuanBaru.focus();
+                inputSatuanBaru.required = true;
+            } else {
+                inputSatuanBaru.style.display = 'none';
+                inputSatuanBaru.value = '';
+                inputSatuanBaru.required = false;
+            }
+        });
+
+        inputSatuanBaru.closest('form').addEventListener('submit', function () {
+            if (selectSatuan.value === '__lainnya__') {
+                var val = inputSatuanBaru.value.trim().toLowerCase();
+                if (val === '') return;
+                var opt = document.createElement('option');
+                opt.value = val;
+                opt.textContent = val.charAt(0).toUpperCase() + val.slice(1);
+                opt.selected = true;
+                opt.dataset.kustom = '1';
+                selectSatuan.insertBefore(opt, selectSatuan.querySelector('option[value="__lainnya__"]'));
+                fetch('api.php?action=tambah_satuan&nama=' + encodeURIComponent(val));
+            }
+        });
+    }
+
+    // --- Hapus satuan kustom ---
+    var hapusSatuanTarget = '';
+    var modal = document.getElementById('modalHapusSatuan');
+    if (!modal) return;
+    var bsModal = new bootstrap.Modal(modal);
+
+    document.querySelectorAll('.satuan-badge i').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            var badge = this.closest('.satuan-badge');
+            hapusSatuanTarget = badge.dataset.nama;
+            document.getElementById('hapusSatuanNama').textContent = hapusSatuanTarget;
+
+            // Cek berapa barang yang pakai satuan ini
+            fetch('api.php?action=cek_satuan_dipakai&nama=' + encodeURIComponent(hapusSatuanTarget))
+                .then(function(r) { return r.json(); })
+                .then(function(res) {
+                    var info = document.getElementById('hapusSatuanInfo');
+                    if (res.count > 0) {
+                        document.getElementById('hapusSatuanCount').textContent = res.count;
+                        info.style.display = 'block';
+                    } else {
+                        info.style.display = 'none';
+                    }
+                    bsModal.show();
+                });
+        });
+    });
+
+    document.getElementById('btnKonfirmHapusSatuan').addEventListener('click', function () {
+        var gantiDengan = document.getElementById('hapusSatuanGanti').value;
+        fetch('api.php?action=hapus_satuan', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ nama: hapusSatuanTarget, ganti_dengan: gantiDengan })
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(res) {
+            if (res.success) {
+                bsModal.hide();
+                location.reload();
+            }
+        });
+    });
+});
+</script>

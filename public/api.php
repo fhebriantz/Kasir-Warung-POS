@@ -175,6 +175,68 @@ switch ($action) {
         }
         break;
 
+    case 'tambah_satuan':
+        $nama = strtolower(trim($_GET['nama'] ?? ''));
+        if ($nama !== '') {
+            $stmt = $pdo->prepare("INSERT OR IGNORE INTO satuan_kustom (nama) VALUES (:nama)");
+            $stmt->execute([':nama' => $nama]);
+        }
+        echo json_encode(['success' => true]);
+        break;
+
+    case 'hapus_satuan':
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            echo json_encode(['success' => false]);
+            break;
+        }
+        $input = json_decode(file_get_contents('php://input'), true);
+        $nama = strtolower(trim($input['nama'] ?? ''));
+        $gantiDengan = strtolower(trim($input['ganti_dengan'] ?? 'pcs'));
+        if ($nama === '') {
+            echo json_encode(['success' => false, 'message' => 'Nama satuan kosong.']);
+            break;
+        }
+        // Ganti satuan di semua barang yang pakai satuan ini
+        $stmt = $pdo->prepare("UPDATE barang SET satuan = :ganti WHERE satuan = :lama");
+        $stmt->execute([':ganti' => $gantiDengan, ':lama' => $nama]);
+        $affected = $stmt->rowCount();
+        // Hapus dari tabel satuan_kustom
+        $stmt = $pdo->prepare("DELETE FROM satuan_kustom WHERE nama = ?");
+        $stmt->execute([$nama]);
+        echo json_encode(['success' => true, 'affected' => $affected]);
+        break;
+
+    case 'cek_satuan_dipakai':
+        $nama = strtolower(trim($_GET['nama'] ?? ''));
+        $stmt = $pdo->prepare("SELECT COUNT(*) FROM barang WHERE satuan = ?");
+        $stmt->execute([$nama]);
+        $count = (int) $stmt->fetchColumn();
+        echo json_encode(['count' => $count]);
+        break;
+
+    case 'check_barcode':
+        $bc = trim($_GET['barcode'] ?? '');
+        $excludeId = (int) ($_GET['exclude_id'] ?? 0);
+        if ($bc === '') {
+            echo json_encode(['exists' => false]);
+            break;
+        }
+        if ($excludeId > 0) {
+            $stmt = $pdo->prepare("SELECT id, nama FROM barang WHERE barcode = ? AND id != ?");
+            $stmt->execute([$bc, $excludeId]);
+        } else {
+            $stmt = $pdo->prepare("SELECT id, nama FROM barang WHERE barcode = ?");
+            $stmt->execute([$bc]);
+        }
+        $found = $stmt->fetch();
+        if ($found) {
+            echo json_encode(['exists' => true, 'message' => 'Barcode sudah dipakai oleh: ' . $found['nama']]);
+        } else {
+            echo json_encode(['exists' => false]);
+        }
+        break;
+
     default:
         http_response_code(400);
         echo json_encode(['success' => false, 'message' => 'Aksi tidak dikenali.']);

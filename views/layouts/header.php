@@ -44,6 +44,11 @@
                     </a>
                 </li>
                 <li class="nav-item">
+                    <a class="nav-link <?= ($page ?? '') === 'barcode' ? 'active' : '' ?>" href="index.php?page=barcode">
+                        <i class="bi bi-upc-scan"></i> Barcode
+                    </a>
+                </li>
+                <li class="nav-item">
                     <a class="nav-link <?= ($page ?? '') === 'transaksi' ? 'active' : '' ?>" href="index.php?page=transaksi">
                         <i class="bi bi-receipt"></i> Riwayat
                     </a>

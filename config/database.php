@@ -15,6 +15,9 @@ function getConnection(): PDO
     if ($isNew) {
         require_once __DIR__ . '/init_db.php';
         initDatabase($pdo);
+    } else {
+        require_once __DIR__ . '/migrate.php';
+        migrateDatabase($pdo);
     }
 
     return $pdo;

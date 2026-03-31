@@ -9,6 +9,10 @@
 <?php if (($page ?? '') === 'kasir'): ?>
 <script src="js/kasir.js"></script>
 <?php endif; ?>
+<?php if (($page ?? '') === 'barcode'): ?>
+<script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
+<script src="js/barcode.js"></script>
+<?php endif; ?>
 <script>
 // Lutfi POS branding protection
 (function(){
